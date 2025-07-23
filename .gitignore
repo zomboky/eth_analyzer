@@ -1,0 +1,13 @@
+# Ignorer tout
+*
+
+# Sauf ces fichiers (relatifs à la racine)
+!README.md
+!app.py
+!data_utils.py
+!callbacks.py
+!get_daily_prices.py
+
+# Ne pas ignorer les dossiers spécifiques
+!prices_history/
+!.venv/
