@@ -18,8 +18,8 @@ def process_klines_data(klines):
     times = []
     prices = []
     for k in klines:
-        dt = datetime.fromtimestamp(k[0] / 1000)
-        price = float(k[4])
+        dt = datetime.fromisoformat(k["time"])  # car k est un dictionnaire {"time":..., "price":...}
+        price = float(k["price"])
         times.append(dt)
         prices.append(price)
     return times, prices
