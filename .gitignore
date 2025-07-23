@@ -7,6 +7,7 @@
 !data_utils.py
 !callbacks.py
 !get_daily_prices.py
+!analysis_tools.py
 
 # Ne pas ignorer les dossiers spécifiques
 !prices_history/
