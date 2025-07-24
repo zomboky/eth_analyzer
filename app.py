@@ -1,42 +1,39 @@
+# === Import des modules nécessaires ===
 import dash
 from dash import dcc, html
-from callbacks import register_callbacks
-import pandas as pd
-from analysis_tools import load_prices_from_json, calculate_macd, create_macd_figure
 from dash.dependencies import Input, Output
-from dash import dcc
-from dash import html
 
+# Import des fonctions internes du projet
+from callbacks import register_callbacks  # Pour enregistrer les interactions
+from analysis_tools import load_prices_from_json, calculate_macd, create_macd_figure
 
-
+# === Initialisation de l'application Dash ===
 app = dash.Dash(__name__)
 
-app.layout = html.Div([# Div contenant les boutons et les éléments pricipaux du HUD
-    
-    html.Div(  #Zone d'affichage du MACD
-    id="macd-status",
-    children="Chargement MACD...",
-    style={
-        "textAlign": "center",
-        "fontSize": "20px",
-        "marginTop": "10px",
-        "color": "gray",
-        "fontStyle": "italic"}),
+# === Définition du layout principal de l'application ===
+app.layout = html.Div([
+
+    # ✅ 1. Statut MACD (affiché au-dessus des graphes)
+    html.Div(
+        id="macd-status",
+        style={
+            "textAlign": "center",
+            "fontSize": "20px",
+            "marginTop": "10px",
+            "color": "gray",
+            "fontStyle": "italic"
+        }
+    ),
+
     html.H2("Historique des prix ETHUSDT sur la dernière journée"),
+
+    # ✅ 2. Boutons d'action
     html.Div([
         html.Button("Recharger les données", id="reload-button", n_clicks=0),
         html.Button("Droites de résistances", id="toggle-resistances", n_clicks=0),
-        html.Div(id="macd-status", style={
-            "textAlign": "center",
-            "fontWeight": "bold",
-            "fontSize": "20px",
-            "marginTop": "10px",
-            "height": "30px",
-            "color": "green", }),  #Couleur si avantageux
-
     ], style={"margin-bottom": "10px"}),
 
-    # Div contenant les sliders (les sliders sont cachés par défaut et seront affichés au clic du bouton)
+    # ✅ 3. Conteneur des sliders (pour configurer l'analyse des résistances)
     html.Div(
         id="resistance-sliders-container",
         children=[
@@ -53,7 +50,7 @@ app.layout = html.Div([# Div contenant les boutons et les éléments pricipaux d
                 style={"width": "400px", "margin-bottom": "20px"}
             ),
 
-            html.Label("Précision (1-50)"),
+            html.Label("Précision (1-20)"),
             html.Div(
                 dcc.Slider(
                     id="precision-slider",
@@ -61,22 +58,27 @@ app.layout = html.Div([# Div contenant les boutons et les éléments pricipaux d
                     max=20,
                     step=1,
                     value=10,
-                    marks={i: str(i) for i in range(1, 21, 1)},
+                    marks={i: str(i) for i in range(1, 21)},
                 ),
                 style={"width": "400px", "margin-bottom": "20px"}
             ),
         ],
-        style={"display": "none", "margin-top": "10px"}
+        style={"display": "none", "margin-top": "10px"}  # Caché par défaut
     ),
 
-    dcc.Graph(id="historical-graph"),  #Graphe des prix
-    dcc.Graph(id="macd-graph"),        #Graphe des MACD
-    dcc.Interval(                      #Update automatique du graphe toutes les 60 secondes
+    # ✅ 4. Graphiques (historique des prix et indicateur MACD)
+    dcc.Graph(id="historical-graph"),  # Graphe principal des prix
+    dcc.Graph(id="macd-graph"),        # Graphe MACD
+
+    # ✅ 5. Intervalle automatique de mise à jour (toutes les 60 secondes)
+    dcc.Interval(
         id='interval-component',
-        interval=60*1000,              # 60 000 ms = 60 secondes
+        interval=60 * 1000,  # 60 secondes
         n_intervals=0,
-        max_intervals=-1               # par défaut infini
-),
+        max_intervals=-1     # Infini
+    ),
+
+    # ✅ 6. Popup de confirmation (apparaît brièvement après mise à jour)
     html.Div("Valeurs mises à jour !", id="popup-message", style={
         "display": "none",
         "position": "fixed",
@@ -88,10 +90,20 @@ app.layout = html.Div([# Div contenant les boutons et les éléments pricipaux d
         "box-shadow": "0 0 5px #333",
         "zIndex": 1000,
     }),
-    dcc.Interval(id="popup-interval", interval=2000, n_intervals=0, max_intervals=1, disabled=True),
+
+    # ✅ 7. Intervalle pour masquer le popup après 2 secondes
+    dcc.Interval(
+        id="popup-interval",
+        interval=2000,
+        n_intervals=0,
+        max_intervals=1,
+        disabled=True
+    ),
 ])
 
+# === Enregistrement des callbacks (interactions) dans l'app ===
 register_callbacks(app)
 
+# === Lancement de l'application (uniquement si ce fichier est exécuté directement) ===
 if __name__ == "__main__":
     app.run(debug=True)
