@@ -34,10 +34,11 @@ print("Niveaux de résistance estimés:", resistances)
 def calculate_macd(df, fast=12, slow=26, signal=9):
     df["EMA_fast"] = df["price"].ewm(span=fast, adjust=False).mean()
     df["EMA_slow"] = df["price"].ewm(span=slow, adjust=False).mean()
-    df["MACD"] = df["EMA_fast"] - df["EMA_slow"]
-    df["Signal"] = df["MACD"].ewm(span=signal, adjust=False).mean()
-    df["Histogram"] = df["MACD"] - df["Signal"]
+    df["macd_diff"] = df["EMA_fast"] - df["EMA_slow"]  # DIF
+    df["macd_dea"] = df["macd_diff"].ewm(span=signal, adjust=False).mean()  # DEA
+    df["Histogram"] = df["macd_diff"] - df["macd_dea"]
     return df
+
 
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
@@ -48,11 +49,11 @@ def create_macd_figure(df):
         subplot_titles=("MACD",)
     )
 
-    # Courbes MACD (DIF) et Signal (DEA)
+    # Courbes DIF et DEA
     fig.add_trace(
         go.Scatter(
             x=df["time"],
-            y=df["MACD"],
+            y=df["macd_diff"],
             mode="lines",
             name="DIF (MACD)",
             line=dict(color="purple")
@@ -62,7 +63,7 @@ def create_macd_figure(df):
     fig.add_trace(
         go.Scatter(
             x=df["time"],
-            y=df["Signal"],
+            y=df["macd_dea"],
             mode="lines",
             name="DEA (Signal)",
             line=dict(color="deeppink")

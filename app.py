@@ -4,22 +4,39 @@ from callbacks import register_callbacks
 import pandas as pd
 from analysis_tools import load_prices_from_json, calculate_macd, create_macd_figure
 from dash.dependencies import Input, Output
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 
 
 
 app = dash.Dash(__name__)
 
-app.layout = html.Div([
+app.layout = html.Div([# Div contenant les boutons et les éléments pricipaux du HUD
     
+    html.Div(  #Zone d'affichage du MACD
+    id="macd-status",
+    children="Chargement MACD...",
+    style={
+        "textAlign": "center",
+        "fontSize": "20px",
+        "marginTop": "10px",
+        "color": "gray",
+        "fontStyle": "italic"}),
     html.H2("Historique des prix ETHUSDT sur la dernière journée"),
     html.Div([
         html.Button("Recharger les données", id="reload-button", n_clicks=0),
         html.Button("Droites de résistances", id="toggle-resistances", n_clicks=0),
+        html.Div(id="macd-status", style={
+            "textAlign": "center",
+            "fontWeight": "bold",
+            "fontSize": "20px",
+            "marginTop": "10px",
+            "height": "30px",
+            "color": "green", }),  #Couleur si avantageux
+
     ], style={"margin-bottom": "10px"}),
 
-    # Div contenant les sliders (caché par défaut)
+    # Div contenant les sliders (les sliders sont cachés par défaut et seront affichés au clic du bouton)
     html.Div(
         id="resistance-sliders-container",
         children=[
@@ -56,9 +73,9 @@ app.layout = html.Div([
     dcc.Graph(id="macd-graph"),        #Graphe des MACD
     dcc.Interval(                      #Update automatique du graphe toutes les 60 secondes
         id='interval-component',
-        interval=60*1000,  # 60 000 ms = 60 secondes
+        interval=60*1000,              # 60 000 ms = 60 secondes
         n_intervals=0,
-        max_intervals=-1  # par défaut infini
+        max_intervals=-1               # par défaut infini
 ),
     html.Div("Valeurs mises à jour !", id="popup-message", style={
         "display": "none",

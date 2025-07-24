@@ -9,23 +9,26 @@ from dash.dependencies import Input, Output, State
 
 def register_callbacks(app):
     @app.callback(
-        [Output("historical-graph", "figure"),
-         Output("macd-graph", "figure"),                 # ** Nouveau Output pour le MACD **
-         Output("popup-message", "style"),
-         Output("popup-interval", "disabled"),
-         Output("popup-interval", "n_intervals"),
-         Output("resistance-sliders-container", "style")],
-        [Input("reload-button", "n_clicks"),
-         Input("popup-interval", "n_intervals"),
-         Input("toggle-resistances", "n_clicks"),
-         Input("num-resistances-slider", "value"),
-         Input("precision-slider", "value")],
-        [State("popup-message", "style"),
-         State("resistance-sliders-container", "style")]
+        Output("historical-graph", "figure"),
+        Output("macd-graph", "figure"),
+        Output("popup-message", "style"),
+        Output("popup-interval", "disabled"),
+        Output("popup-interval", "n_intervals"),
+        Output("resistance-sliders-container", "style"),
+        Output("macd-status", "children"),
+        Output("macd-status", "style"),
+        Input("reload-button", "n_clicks"),
+        Input("popup-interval", "n_intervals"),
+        Input("toggle-resistances", "n_clicks"),
+        Input("num-resistances-slider", "value"),
+        Input("precision-slider", "value"),
+        State("popup-message", "style"),
+        State("resistance-sliders-container", "style"),
     )
+
     def update_graph_and_popup(n_clicks, n_intervals, resistance_clicks,
-                          num_resistances, precision,
-                          current_style, current_slider_style):
+                                num_resistances, precision,
+                                current_style, current_slider_style):
         ctx = callback_context
 
         # --- Charger les données ---
@@ -41,7 +44,46 @@ def register_callbacks(app):
         # Calcul MACD
         df = calculate_macd(df)
 
-        # Création des figures
+        # Renommer les colonnes si nécessaire
+        df = df.rename(columns={
+            "MACD": "macd_diff",
+            "Signal": "macd_dea"
+        })
+
+        # Sécurité si colonne absente
+        if "macd_diff" not in df or "macd_dea" not in df:
+            macd_status = "MACD indisponible"
+            macd_status_style = {
+                "color": "gray",
+                "fontStyle": "italic",
+                "textAlign": "center",
+                "fontSize": "20px",
+                "marginTop": "10px"
+            }
+        else:
+            macd_diff = df["macd_diff"].iloc[-1]
+            macd_dea = df["macd_dea"].iloc[-1]
+
+            if macd_dea > macd_diff:
+                macd_status = "MACD avantageux"
+                macd_status_style = {
+                    "color": "green",
+                    "fontWeight": "bold",
+                    "textAlign": "center",
+                    "fontSize": "20px",
+                    "marginTop": "10px"
+                }
+            else:
+                macd_status = "MACD désavantageux"
+                macd_status_style = {
+                    "color": "red",
+                    "fontWeight": "bold",
+                    "textAlign": "center",
+                    "fontSize": "20px",
+                    "marginTop": "10px"
+                }
+
+        # Création de la figure de prix
         fig = go.Figure()
         fig.add_trace(go.Scatter(
             x=times,
@@ -59,19 +101,18 @@ def register_callbacks(app):
 
         macd_fig = create_macd_figure(df)  # Figure MACD
 
-        # Si pas d'événement déclencheur => initialisation avec graph seul, MACD vide
+        # Si pas d’événement déclencheur
         if not ctx.triggered:
             empty_macd_fig = go.Figure()
-            return fig, empty_macd_fig, {"display": "none"}, True, 0, {"display": "none"}
+            return fig, empty_macd_fig, {"display": "none"}, True, 0, {"display": "none"}, macd_status, macd_status_style
 
         triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
         sliders_visible = current_slider_style.get("display") == "block"
 
-        # Gestion toggles résistances
+        # Gestion des résistances
         if triggered_id == "toggle-resistances":
             if sliders_visible:
-                return fig, macd_fig, current_style, True, 0, {"display": "none"}
+                return fig, macd_fig, current_style, True, 0, {"display": "none"}, macd_status, macd_status_style
             else:
                 resistances = find_resistance_levels(prices, n=num_resistances, precision=precision)
                 for r in resistances:
@@ -83,7 +124,7 @@ def register_callbacks(app):
                         y1=r,
                         line=dict(color="green", width=2, dash="dot"),
                     )
-                return fig, macd_fig, current_style, True, 0, {"display": "block"}
+                return fig, macd_fig, current_style, True, 0, {"display": "block"}, macd_status, macd_status_style
 
         elif triggered_id in ["num-resistances-slider", "precision-slider"]:
             if sliders_visible:
@@ -97,9 +138,9 @@ def register_callbacks(app):
                         y1=r,
                         line=dict(color="green", width=2, dash="dot"),
                     )
-                return fig, macd_fig, current_style, True, 0, current_slider_style
+                return fig, macd_fig, current_style, True, 0, current_slider_style, macd_status, macd_status_style
             else:
-                return fig, macd_fig, current_style, True, 0, current_slider_style
+                return fig, macd_fig, current_style, True, 0, current_slider_style, macd_status, macd_status_style
 
         elif triggered_id == "reload-button" and n_clicks > 0:
             style_show = {
@@ -113,11 +154,9 @@ def register_callbacks(app):
                 "box-shadow": "0 0 5px #333",
                 "zIndex": 1000,
             }
-            # Désactive l'interval pour éviter déclenchements multiples
-            return fig, macd_fig, style_show, False, 0, {"display": "none"}
+            return fig, macd_fig, style_show, False, 0, {"display": "none"}, macd_status, macd_status_style
 
         elif triggered_id == "popup-interval" and n_intervals >= 1:
-            # Même comportement que reload-button automatique :
             style_show = {
                 "display": "block",
                 "position": "fixed",
@@ -129,9 +168,7 @@ def register_callbacks(app):
                 "box-shadow": "0 0 5px #333",
                 "zIndex": 1000,
             }
-            # Désactive temporairement l'interval (disable=True), reset n_intervals à 0
-            return fig, macd_fig, style_show, False, 0, {"display": "none"}
+            return fig, macd_fig, style_show, False, 0, {"display": "none"}, macd_status, macd_status_style
 
         else:
-            # Pour les autres triggers, on garde l’état actuel
-            return fig, macd_fig, current_style, dash.no_update, dash.no_update, current_slider_style
+            return fig, macd_fig, current_style, dash.no_update, dash.no_update, current_slider_style, macd_status, macd_status_style
