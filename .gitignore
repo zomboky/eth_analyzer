@@ -8,6 +8,8 @@
 !callbacks.py
 !get_daily_prices.py
 !analysis_tools.py
+!requirements.txt
+
 
 # Ne pas ignorer les dossiers spécifiques
 !prices_history/
