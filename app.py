@@ -4,6 +4,8 @@ from callbacks import register_callbacks
 import pandas as pd
 from analysis_tools import load_prices_from_json, calculate_macd, create_macd_figure
 from dash.dependencies import Input, Output
+import dash_core_components as dcc
+import dash_html_components as html
 
 
 
@@ -52,6 +54,12 @@ app.layout = html.Div([
 
     dcc.Graph(id="historical-graph"),  #Graphe des prix
     dcc.Graph(id="macd-graph"),        #Graphe des MACD
+    dcc.Interval(                      #Update automatique du graphe toutes les 60 secondes
+        id='interval-component',
+        interval=60*1000,  # 60 000 ms = 60 secondes
+        n_intervals=0,
+        max_intervals=-1  # par défaut infini
+),
     html.Div("Valeurs mises à jour !", id="popup-message", style={
         "display": "none",
         "position": "fixed",

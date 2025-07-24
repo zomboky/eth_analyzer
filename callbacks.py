@@ -5,6 +5,7 @@ from data_utils import load_data_from_json, process_klines_data
 from analysis_tools import find_resistance_levels, calculate_macd, create_macd_figure
 import pandas as pd
 import json
+from dash.dependencies import Input, Output, State
 
 def register_callbacks(app):
     @app.callback(
@@ -23,8 +24,8 @@ def register_callbacks(app):
          State("resistance-sliders-container", "style")]
     )
     def update_graph_and_popup(n_clicks, n_intervals, resistance_clicks,
-                              num_resistances, precision,
-                              current_style, current_slider_style):
+                          num_resistances, precision,
+                          current_style, current_slider_style):
         ctx = callback_context
 
         # --- Charger les données ---
@@ -32,12 +33,6 @@ def register_callbacks(app):
         times, prices = process_klines_data(klines)
 
         # Construire DataFrame avec time et price pour MACD
-        # Ici, on suppose load_data_from_json charge la même source que les JSON prix historiques
-        # Sinon tu peux adapter en ouvrant directement le fichier JSON :
-        # with open("prices_history/2025-07-24.json", "r") as f:
-        #     raw_data = json.load(f)
-        # df = pd.DataFrame(raw_data)
-
         df = pd.DataFrame({
             "time": times,
             "price": prices
@@ -62,7 +57,6 @@ def register_callbacks(app):
             template="plotly_white"
         )
 
-        
         macd_fig = create_macd_figure(df)  # Figure MACD
 
         # Si pas d'événement déclencheur => initialisation avec graph seul, MACD vide
@@ -119,10 +113,25 @@ def register_callbacks(app):
                 "box-shadow": "0 0 5px #333",
                 "zIndex": 1000,
             }
+            # Désactive l'interval pour éviter déclenchements multiples
             return fig, macd_fig, style_show, False, 0, {"display": "none"}
 
-        elif triggered_id == "popup-interval" and n_intervals == 1:
-            return fig, macd_fig, {"display": "none"}, True, 0, current_slider_style
+        elif triggered_id == "popup-interval" and n_intervals >= 1:
+            # Même comportement que reload-button automatique :
+            style_show = {
+                "display": "block",
+                "position": "fixed",
+                "top": "20px",
+                "right": "20px",
+                "background-color": "lightgreen",
+                "padding": "10px",
+                "border-radius": "5px",
+                "box-shadow": "0 0 5px #333",
+                "zIndex": 1000,
+            }
+            # Désactive temporairement l'interval (disable=True), reset n_intervals à 0
+            return fig, macd_fig, style_show, False, 0, {"display": "none"}
 
         else:
+            # Pour les autres triggers, on garde l’état actuel
             return fig, macd_fig, current_style, dash.no_update, dash.no_update, current_slider_style
