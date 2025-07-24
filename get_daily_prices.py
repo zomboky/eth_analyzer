@@ -28,4 +28,4 @@ def get_daily_prices(symbol="ETHUSDC", interval="1m", limit=1440):
     return prices
 
 
-get_daily_prices(symbol="ETHUSDC", interval="1m", limit=1440)  # Exemple d'appel de la fonction
+#get_daily_prices(symbol="ETHUSDC", interval="1m", limit=1440)  # Exemple d'appel de la fonction

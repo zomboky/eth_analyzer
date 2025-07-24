@@ -1,7 +1,10 @@
 import dash
 from dash import dcc, html
 from callbacks import register_callbacks
-from analysis_tools import find_resistance_levels, load_prices_from_json
+import pandas as pd
+from analysis_tools import load_prices_from_json, calculate_macd, create_macd_figure
+from dash.dependencies import Input, Output
+
 
 
 app = dash.Dash(__name__)
@@ -47,7 +50,8 @@ app.layout = html.Div([
         style={"display": "none", "margin-top": "10px"}
     ),
 
-    dcc.Graph(id="historical-graph"),
+    dcc.Graph(id="historical-graph"),  #Graphe des prix
+    dcc.Graph(id="macd-graph"),        #Graphe des MACD
     html.Div("Valeurs mises à jour !", id="popup-message", style={
         "display": "none",
         "position": "fixed",
