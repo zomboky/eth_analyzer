@@ -24,6 +24,16 @@ app.layout = html.Div([
             "fontStyle": "italic"
         }
     ),
+    # Ajout de la zone qui affiche la croissance du MACD
+    html.Div(
+        id="macd-growth",
+        style={
+            "textAlign": "center",
+            "fontSize": "20px",
+            "marginTop": "10px",
+            "color": "black",
+            "fontStyle": "bold"
+        }),
 
     html.H2("Historique des prix ETHUSDT sur la dernière journée"),
 

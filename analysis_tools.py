@@ -70,6 +70,11 @@ def calculate_macd(df, fast=12, slow=26, signal=9):
     df["macd_dea"] = df["macd_diff"].ewm(span=signal, adjust=False).mean()
     # Histogramme = différence entre MACD et signal (DEA)
     df["Histogram"] = df["macd_diff"] - df["macd_dea"]
+
+    df["price_diff"] = df["price"].diff() # La méthode Pandas "diff" calcule la différence entre une valeur et la précédente
+
+    df["trend"] = df["price_diff"].apply( # Création d'une colonne "trend" dans le df pour catégoriser la tendance
+        lambda x: "up" if x > 0 else ("down" if x < 0 else "flat"))
     
     return df
 
@@ -126,3 +131,4 @@ def create_macd_figure(df):
 
 # Note : L'exemple d'utilisation (chargement des prix, calcul des résistances, affichage des résultats)
 # doit être placé dans un script principal, pas dans ce module, pour garder la modularité.
+

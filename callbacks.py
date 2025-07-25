@@ -17,6 +17,7 @@ def register_callbacks(app):
         Output("resistance-sliders-container", "style"),
         Output("macd-status", "children"),
         Output("macd-status", "style"),
+        Output("macd-growth", "children"),
         Input("reload-button", "n_clicks"),
         Input("popup-interval", "n_intervals"),
         Input("toggle-resistances", "n_clicks"),
@@ -93,6 +94,12 @@ def register_callbacks(app):
             line=dict(color="blue", width=2)
         ))
 
+        last_trend = df["trend"].iloc[-1]
+        macd_growth = f"Tendance actuelle : {last_trend}"
+
+        # La ligne du dessus convertit le dictionnaire {up, down, flat} en string pour pouvoir l'afficher dans le return de la fonction
+
+
         fig.update_layout(
             xaxis_title="Temps",
             yaxis_title="Prix (USDT)",
@@ -104,7 +111,7 @@ def register_callbacks(app):
         # Si pas d’événement déclencheur
         if not ctx.triggered:
             empty_macd_fig = go.Figure()
-            return fig, empty_macd_fig, {"display": "none"}, True, 0, {"display": "none"}, macd_status, macd_status_style
+            return fig, empty_macd_fig, {"display": "none"}, True, 0, {"display": "none"}, macd_status, macd_status_style, macd_growth
 
         triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
         sliders_visible = current_slider_style.get("display") == "block"
@@ -112,7 +119,7 @@ def register_callbacks(app):
         # Gestion des résistances
         if triggered_id == "toggle-resistances":
             if sliders_visible:
-                return fig, macd_fig, current_style, True, 0, {"display": "none"}, macd_status, macd_status_style
+                return fig, macd_fig, current_style, True, 0, {"display": "none"}, macd_status, macd_status_style, macd_growth
             else:
                 resistances = find_resistance_levels(prices, n=num_resistances, precision=precision)
                 for r in resistances:
@@ -124,7 +131,7 @@ def register_callbacks(app):
                         y1=r,
                         line=dict(color="green", width=2, dash="dot"),
                     )
-                return fig, macd_fig, current_style, True, 0, {"display": "block"}, macd_status, macd_status_style
+                return fig, macd_fig, current_style, True, 0, {"display": "block"}, macd_status, macd_status_style, macd_growth
 
         elif triggered_id in ["num-resistances-slider", "precision-slider"]:
             if sliders_visible:
@@ -138,9 +145,9 @@ def register_callbacks(app):
                         y1=r,
                         line=dict(color="green", width=2, dash="dot"),
                     )
-                return fig, macd_fig, current_style, True, 0, current_slider_style, macd_status, macd_status_style
+                return fig, macd_fig, current_style, True, 0, current_slider_style, macd_status, macd_status_style, macd_growth
             else:
-                return fig, macd_fig, current_style, True, 0, current_slider_style, macd_status, macd_status_style
+                return fig, macd_fig, current_style, True, 0, current_slider_style, macd_status, macd_status_style, macd_growth
 
         elif triggered_id == "reload-button" and n_clicks > 0:
             style_show = {
@@ -154,7 +161,7 @@ def register_callbacks(app):
                 "box-shadow": "0 0 5px #333",
                 "zIndex": 1000,
             }
-            return fig, macd_fig, style_show, False, 0, {"display": "none"}, macd_status, macd_status_style
+            return fig, macd_fig, style_show, False, 0, {"display": "none"}, macd_status, macd_status_style, macd_growth
 
         elif triggered_id == "popup-interval" and n_intervals >= 1:
             style_show = {
@@ -168,7 +175,7 @@ def register_callbacks(app):
                 "box-shadow": "0 0 5px #333",
                 "zIndex": 1000,
             }
-            return fig, macd_fig, style_show, False, 0, {"display": "none"}, macd_status, macd_status_style
+            return fig, macd_fig, style_show, False, 0, {"display": "none"}, macd_status, macd_status_style, macd_growth
 
         else:
-            return fig, macd_fig, current_style, dash.no_update, dash.no_update, current_slider_style, macd_status, macd_status_style
+            return fig, macd_fig, current_style, dash.no_update, dash.no_update, current_slider_style, macd_status, macd_status_style, macd_growth
