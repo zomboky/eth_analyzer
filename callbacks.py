@@ -94,6 +94,7 @@ def register_callbacks(app):
             line=dict(color="blue", width=2)
         ))
 
+
         # Vérification de la tendance actuelle
         # Calcul du DEA_diff et de la tendance actuelle
         dea_diff = df["macd_dea"].iloc[-1] - df["macd_dea"].iloc[-2]
@@ -115,7 +116,8 @@ def register_callbacks(app):
         fig.update_layout(
             xaxis_title="Temps",
             yaxis_title="Prix (USDT)",
-            template="plotly_white"
+            template="plotly_white",
+            uirevision="prix"  # <-- c'est cette ligne qui fixe le zoom/pan
         )
 
         macd_fig = create_macd_figure(df)  # Figure MACD

@@ -105,6 +105,7 @@ def create_macd_figure(df):
         ),
         row=1, col=1
     )
+    
     # Trace la courbe DEA (signal)
     fig.add_trace(
         go.Scatter(
@@ -117,17 +118,19 @@ def create_macd_figure(df):
         row=1, col=1
     )
 
-    # Mise en forme générale du graphique
+    # Mise en forme générale du graphique avec conservation du zoom
     fig.update_layout(
         height=400,
         template="plotly_white",
         title="Indicateur MACD (DIF & DEA)",
         margin=dict(t=40, b=40, l=40, r=40),
-        legend=dict(orientation="h", y=-0.2)
+        legend=dict(orientation="h", y=-0.2),
+        uirevision="macd-zoom"  # <- Ceci permet de garder le zoom/pan
     )
     fig.update_yaxes(title_text="MACD / Signal", row=1, col=1)
 
     return fig
+
 
 # Note : L'exemple d'utilisation (chargement des prix, calcul des résistances, affichage des résultats)
 # doit être placé dans un script principal, pas dans ce module, pour garder la modularité.
