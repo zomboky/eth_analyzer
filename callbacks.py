@@ -95,13 +95,20 @@ def register_callbacks(app):
         ))
 
         # Vérification de la tendance actuelle
-        last_trend = df["trend"].iloc[-1]
-        #Définition des couleurs de la trend du MACD et convertion en chaîne de caractères
+        # Calcul du DEA_diff et de la tendance actuelle
+        dea_diff = df["macd_dea"].iloc[-1] - df["macd_dea"].iloc[-2]
+        if abs(dea_diff) < 1e-6:
+            last_trend = "flat"
+        elif dea_diff > 0:
+            last_trend = "up"
+        else:
+            last_trend = "down"
+
         trend_color = {
             "up": "green",
             "down": "red",
             "flat": "yellow"
-        }.get(last_trend, "gray")  # fallback "gray" si autre chose
+        }[last_trend]
 
         macd_trend_text = f"Tendance actuelle : {last_trend}"
 
