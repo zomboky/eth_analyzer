@@ -2,7 +2,7 @@ import dash
 from dash import Output, Input, State, callback_context
 import plotly.graph_objs as go
 from data_utils import load_data_from_json, process_klines_data
-from analysis_tools import find_resistance_levels, calculate_macd, create_macd_figure
+from analysis_tools import find_resistance_levels, calculate_macd, create_macd_figure, classify_support_resistance
 import pandas as pd
 import json
 from dash.dependencies import Input, Output, State
@@ -18,7 +18,6 @@ def register_callbacks(app):
         Output("resistance-sliders-container", "style"),
         Output("macd-status", "children"),
         Output("macd-status", "style"),
-        #Output("macd-growth", "children"),
         Output("macd-trend-text", "children"),
         Input("reload-button", "n_clicks"),
         Input("popup-interval", "n_intervals"),
@@ -28,7 +27,6 @@ def register_callbacks(app):
         State("popup-message", "style"),
         State("resistance-sliders-container", "style"),
     )
-
     def update_graph_and_popup(n_clicks, n_intervals, resistance_clicks,
                                 num_resistances, precision,
                                 current_style, current_slider_style):
@@ -96,10 +94,8 @@ def register_callbacks(app):
             line=dict(color="blue", width=2)
         ))
 
+        # Vérification de la tendance actuelle
         last_trend = df["trend"].iloc[-1]
-
-
-
         #Définition des couleurs de la trend du MACD et convertion en chaîne de caractères
         trend_color = {
             "up": "green",
@@ -108,7 +104,6 @@ def register_callbacks(app):
         }.get(last_trend, "gray")  # fallback "gray" si autre chose
 
         macd_trend_text = f"Tendance actuelle : {last_trend}"
-
 
         fig.update_layout(
             xaxis_title="Temps",
@@ -134,30 +129,52 @@ def register_callbacks(app):
 
             else:
                 resistances = find_resistance_levels(prices, n=num_resistances, precision=precision)
+
+                # Classification des niveaux
+                levels_classification = classify_support_resistance(df, resistances, seuil=0.001)
+                levels_colors = {
+                    "support": "green",
+                    "resistance": "red",
+                    "neutral": "yellow"
+                }
+
                 for r in resistances:
+                    classification = levels_classification.get(r, "neutral")
                     fig.add_shape(
                         type="line",
                         x0=times[0],
                         x1=times[-1],
                         y0=r,
                         y1=r,
-                        line=dict(color="green", width=2, dash="dot"),
+                        line=dict(color=levels_colors[classification], width=2, dash="dot"),
                     )
+
                 return fig, macd_fig, current_style, True, 0, {"display": "block"}, macd_status, macd_status_style, html.Span(macd_trend_text, style={"color": trend_color}),
 
 
         elif triggered_id in ["num-resistances-slider", "precision-slider"]:
             if sliders_visible:
                 resistances = find_resistance_levels(prices, n=num_resistances, precision=precision)
+
+                # Classification des niveaux
+                levels_classification = classify_support_resistance(df, resistances, seuil=0.001)
+                levels_colors = {
+                    "support": "green",
+                    "resistance": "red",
+                    "neutral": "yellow"
+                }
+
                 for r in resistances:
+                    classification = levels_classification.get(r, "neutral")
                     fig.add_shape(
                         type="line",
                         x0=times[0],
                         x1=times[-1],
                         y0=r,
                         y1=r,
-                        line=dict(color="green", width=2, dash="dot"),
+                        line=dict(color=levels_colors[classification], width=2, dash="dot"),
                     )
+
                 return fig, macd_fig, current_style, True, 0, current_slider_style, macd_status, macd_status_style,  html.Span(macd_trend_text, style={"color": trend_color}),
 
             else:
@@ -196,4 +213,3 @@ def register_callbacks(app):
 
         else:
             return fig, macd_fig, current_style, dash.no_update, dash.no_update, current_slider_style, macd_status, macd_status_style, html.Span(macd_trend_text, style={"color": trend_color}),
-

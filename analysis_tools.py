@@ -132,3 +132,35 @@ def create_macd_figure(df):
 # Note : L'exemple d'utilisation (chargement des prix, calcul des résistances, affichage des résultats)
 # doit être placé dans un script principal, pas dans ce module, pour garder la modularité.
 
+def classify_support_resistance(df, levels, seuil=0.03):
+    close_prices = df['price'].values
+    level_classification = {}
+
+    for level in levels:
+        support_count = 0
+        resistance_count = 0
+        neutral_count = 0
+
+        for i in range(1, len(close_prices)-1):
+            if abs(close_prices[i] - level) / level <= seuil:
+                prev = close_prices[i - 1]
+                curr = close_prices[i]
+                nxt = close_prices[i + 1]
+
+                if prev > level and nxt > level:
+                    support_count += 1
+                elif prev < level and nxt < level:
+                    resistance_count += 1
+                else:
+                    neutral_count += 1
+
+        if support_count > resistance_count and support_count > neutral_count:
+            level_classification[level] = 'support'
+        elif resistance_count > support_count and resistance_count > neutral_count:
+            level_classification[level] = 'resistance'
+        else:
+            level_classification[level] = 'neutral'
+
+    return level_classification
+
+

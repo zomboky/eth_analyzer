@@ -51,7 +51,7 @@ app.layout = html.Div([
         children=[
             html.Label("Nombre de droites (1-20)"),
             html.Div(
-                dcc.Slider(
+                dcc.Slider( 
                     id="num-resistances-slider",
                     min=1,
                     max=20,
