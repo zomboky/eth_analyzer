@@ -140,6 +140,7 @@ def register_callbacks(app):
 
                 for r in resistances:
                     classification = levels_classification.get(r, "neutral")
+                    # Ajouter une ligne visuelle
                     fig.add_shape(
                         type="line",
                         x0=times[0],
@@ -147,7 +148,20 @@ def register_callbacks(app):
                         y0=r,
                         y1=r,
                         line=dict(color=levels_colors[classification], width=2, dash="dot"),
+                        layer="below",
                     )
+
+                    # Ajouter la valeur de la droite de résistance lorsque qu'on passe la souris dessus
+                    fig.add_trace(go.Scatter(
+                        x=[times[-1]],
+                        y=[r],
+                        mode="markers",
+                        marker=dict(color=levels_colors[classification], size=8, opacity=0),
+                        showlegend=False,
+                        hoverinfo="text",
+                        hovertext=f"{classification.capitalize()} : {r:.2f} USDT"
+                    ))
+
 
                 return fig, macd_fig, current_style, True, 0, {"display": "block"}, macd_status, macd_status_style, html.Span(macd_trend_text, style={"color": trend_color}),
 
@@ -166,6 +180,7 @@ def register_callbacks(app):
 
                 for r in resistances:
                     classification = levels_classification.get(r, "neutral")
+                    # Ajouter une ligne visuelle
                     fig.add_shape(
                         type="line",
                         x0=times[0],
@@ -173,7 +188,20 @@ def register_callbacks(app):
                         y0=r,
                         y1=r,
                         line=dict(color=levels_colors[classification], width=2, dash="dot"),
+                        layer="below",
                     )
+
+                    # Ajouter la valeur de la droite de résistance lorsque qu'on passe la souris dessus
+                    fig.add_trace(go.Scatter(
+                        x=[times[-1]],
+                        y=[r],
+                        mode="markers",
+                        marker=dict(color=levels_colors[classification], size=8, opacity=0),
+                        showlegend=False,
+                        hoverinfo="text",
+                        hovertext=f"{classification.capitalize()} : {r:.2f} USDT"
+                    ))
+
 
                 return fig, macd_fig, current_style, True, 0, current_slider_style, macd_status, macd_status_style,  html.Span(macd_trend_text, style={"color": trend_color}),
 
